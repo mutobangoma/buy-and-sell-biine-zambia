@@ -1,0 +1,190 @@
+// index.html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1f2937" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" href="/icon-192.png" />
+    <title>Classifieds App</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+
+// main.jsx (JavaScript)
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import "./index.css";
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/service-worker.js");
+  });
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+// App.jsx (JavaScript - Core App)
+import React, { useState, useEffect } from "react";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { getFirestore, collection, getDocs, addDoc } from "firebase/firestore";
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "firebase/auth";
+import { initializeApp } from "firebase/app";
+
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+const Home = () => {
+  const [ads, setAds] = useState([]);
+
+  useEffect(() => {
+    const fetchAds = async () => {
+      const querySnapshot = await getDocs(collection(db, "ads"));
+      const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setAds(data);
+    };
+    fetchAds();
+  }, []);
+
+  return (
+    <div className="p-4">
+      <h1 className="text-xl font-bold mb-4">Classified Ads</h1>
+      {ads.map(ad => (
+        <div key={ad.id} className="border rounded-xl p-4 shadow mb-4">
+          <h2 className="text-lg font-semibold">{ad.title}</h2>
+          <p>{ad.description}</p>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const PostAd = () => {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    await addDoc(collection(db, "ads"), { title, description, createdAt: Date.now() });
+    setTitle("");
+    setDescription("");
+    alert("Ad posted successfully!");
+  };
+
+  return (
+    <div className="p-4">
+      <h1 className="text-xl font-bold mb-4">Post an Ad</h1>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Title" className="w-full p-2 border rounded" required />
+        <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Description" className="w-full p-2 border rounded" required />
+        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">Post Ad</button>
+      </form>
+    </div>
+  );
+};
+
+const AuthButton = () => {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => setUser(user));
+    return () => unsubscribe();
+  }, []);
+
+  const login = () => {
+    const provider = new GoogleAuthProvider();
+    signInWithPopup(auth, provider);
+  };
+
+  const logout = () => {
+    signOut(auth);
+  };
+
+  return (
+    <div className="p-4 flex justify-end">
+      {user ? (
+        <>
+          <span className="mr-2">Hello, {user.displayName}</span>
+          <button onClick={logout} className="bg-red-500 text-white px-3 py-1 rounded">Logout</button>
+        </>
+      ) : (
+        <button onClick={login} className="bg-green-600 text-white px-3 py-1 rounded">Login with Google</button>
+      )}
+    </div>
+  );
+};
+
+export default function App() {
+  return (
+    <Router>
+      <AuthButton />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/post" element={<PostAd />} />
+      </Routes>
+    </Router>
+  );
+}
+
+// index.css (TailwindCSS)
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+// manifest.json
+{
+  "name": "Classifieds App",
+  "short_name": "Classifieds",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1f2937",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
+
+// service-worker.js
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open('static').then(cache => {
+      return cache.addAll(['/', '/index.html']);
+    })
+  );
+});
+
+self.addEventListener('fetch', e => {
+  e.respondWith(
+    caches.match(e.request).then(response => {
+      return response || fetch(e.request);
+    })
+  );
+});
