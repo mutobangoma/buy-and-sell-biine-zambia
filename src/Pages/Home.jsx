@@ -1,7 +1,8 @@
-// src/pages/Home.jsx
+// src/pages/Home.jsx 
 import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
+import { Link } from "react-router-dom";
 
 function Home() {
   const [ads, setAds] = useState([]);
@@ -25,6 +26,17 @@ function Home() {
 
   return (
     <div className="p-4">
+      {/* ✅ Navbar with Post Link */}
+      <nav className="flex justify-between items-center mb-6 p-4 bg-gray-100 rounded shadow">
+        <h2 className="text-lg font-semibold">Biine Classifieds</h2>
+        <Link
+          to="/post-ad"
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          Post a New Ad
+        </Link>
+      </nav>
+
       <h1 className="text-xl font-bold mb-4">Latest Ads</h1>
       <div className="grid gap-4">
         {ads.map(ad => (
