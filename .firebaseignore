@@ -1,0 +1,10 @@
+node_modules/
+dist/**/*.map
+firebase-debug.log
+firebase-debug.*.log
+.DS_Store
+.vscode/
+.env
+*.iml
+.idea/
+*.log

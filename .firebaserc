@@ -1,7 +1,5 @@
 {
   "projects": {
     "default": "biine-4b5a9"
-  },
-  "targets": {},
-  "etags": {}
+  }
 }

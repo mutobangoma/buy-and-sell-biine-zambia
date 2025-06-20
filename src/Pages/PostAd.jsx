@@ -1,180 +1,155 @@
-import { useState, useEffect } from "react";
-import { addDoc, collection } from "firebase/firestore";
-import { db, storage, auth } from "../firebase";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { useNavigate } from "react-router-dom";
-import { v4 as uuidv4 } from "uuid";
-import { serverTimestamp } from "firebase/firestore";
+import { useState } from "react";
+import { auth, db, storage } from "../firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
+import { collection, addDoc, Timestamp } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
-function PostAd() {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [price, setPrice] = useState("");
-  const [location, setLocation] = useState("");
-  const [category, setCategory] = useState("Electronics");
-  const [contact, setContact] = useState("");
-  const [image, setImage] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export default function PostAd() {
+  const [user] = useAuthState(auth);
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    price: "",
+    category: "",
+    location: "",
+    image: null,
+  });
+  const [uploading, setUploading] = useState(false);
+  const [success, setSuccess] = useState("");
 
-  const [user, authLoading] = useAuthState(auth);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-  if (!authLoading && !user) {
-    navigate("/login");
+  if (!user) {
+    return (
+      <div className="p-4 max-w-lg mx-auto text-center">
+        <h1 className="text-xl font-bold mb-2">Login Required</h1>
+        <p className="text-gray-700">You must be logged in to post an ad.</p>
+      </div>
+    );
   }
-}, [user, authLoading, navigate]);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert("Image must be under 5MB.");
-        return;
-      }
-      setImage(file);
-    }
+    const { name, value, files } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: files ? files[0] : value,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    let imageUrl = "";
+    setUploading(true);
 
     try {
-      // Upload image if present
-      if (image) {
-        const imageRef = ref(storage, `ads/${uuidv4()}-${image.name}`);
-        const snapshot = await uploadBytes(imageRef, image);
-        imageUrl = await getDownloadURL(snapshot.ref);
+      let imageUrl = "";
+      if (form.image) {
+        const imageRef = ref(storage, `ads/${Date.now()}-${form.image.name}`);
+        await uploadBytes(imageRef, form.image);
+        imageUrl = await getDownloadURL(imageRef);
       }
 
+      const now = Timestamp.now();
+      const expiresAt = Timestamp.fromDate(
+        new Date(now.toDate().getTime() + 5 * 24 * 60 * 60 * 1000) // +5 days
+      );
+
       await addDoc(collection(db, "ads"), {
-        ...form,
-        price: Number(form.price),
+        userId: user.uid,
+        title: form.title,
+        description: form.description,
+        price: form.price,
+        category: form.category,
+        location: form.location,
         imageUrl,
-        createdAt: serverTimestamp(),
+        createdAt: now,
+        expiresAt,
+        featured: false,
       });
 
-      alert("Ad posted successfully!");
+      setSuccess("✅ Ad posted successfully! It will expire in 5 days.");
       setForm({
         title: "",
         description: "",
         price: "",
+        category: "",
         location: "",
-        category: "Electronics",
-        contact: "",
+        image: null,
       });
-      setImage(null);
-      navigate("/");
-    } catch (error) {
-      console.error("Error posting ad:", error);
-      alert("Failed to post ad.");
+    } catch (err) {
+      console.error("❌ Failed to post ad:", err);
+      alert("Failed to post ad. Please try again.");
     } finally {
-      setLoading(false);
+      setUploading(false);
     }
   };
 
   return (
-    <div className="p-4 max-w-xl mx-auto">
+    <div className="max-w-xl mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Post a New Ad</h1>
-      <form onSubmit={handleSubmit} className="grid gap-4">
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
-          className="border p-2 rounded"
-        />
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
-          className="border p-2 rounded"
-        />
-        {image && (
-          <img
-            src={URL.createObjectURL(image)}
-            alt="Preview"
-            className="h-40 object-contain border rounded"
-          />
-        )}
+
+      {success && <p className="text-green-600 mb-4">{success}</p>}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="text"
           name="title"
-          placeholder="Title"
+          placeholder="Ad title"
           value={form.title}
           onChange={handleChange}
           required
-          className="border p-2 rounded"
+          className="w-full p-2 border rounded"
         />
+
         <textarea
           name="description"
           placeholder="Description"
           value={form.description}
           onChange={handleChange}
           required
-          className="border p-2 rounded"
+          className="w-full p-2 border rounded"
         />
+
         <input
-          type="number"
+          type="text"
           name="price"
           placeholder="Price"
           value={form.price}
           onChange={handleChange}
-          required
-          className="border p-2 rounded"
+          className="w-full p-2 border rounded"
         />
+
+        <input
+          type="text"
+          name="category"
+          placeholder="Category (e.g., Cars)"
+          value={form.category}
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
+        />
+
         <input
           type="text"
           name="location"
           placeholder="Location"
           value={form.location}
           onChange={handleChange}
-          required
-          className="border p-2 rounded"
+          className="w-full p-2 border rounded"
         />
-        <select
-          name="category"
-          value={form.category}
-          onChange={handleChange}
-          required
-          className="border p-2 rounded"
-        >
-          <option>Electronics</option>
-          <option>Furniture</option>
-          <option>Vehicles</option>
-          <option>Jobs</option>
-          <option>Real Estate</option>
-          <option>Services</option>
-          <option>Other</option>
-        </select>
+
         <input
-          type="tel"
-          name="contact"
-          placeholder="Contact Number"
-          value={form.contact}
+          type="file"
+          name="image"
+          accept="image/*"
           onChange={handleChange}
-          required
-          className="border p-2 rounded"
+          className="w-full p-2 border rounded"
         />
 
         <button
           type="submit"
-          disabled={loading}
-          className={`p-2 rounded text-white ${
-            loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
-          }`}
+          className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
+          disabled={uploading}
         >
-          {loading ? "Posting..." : "Post Ad"}
+          {uploading ? "Posting..." : "Post Ad"}
         </button>
       </form>
     </div>
   );
 }
-
-export default PostAd;

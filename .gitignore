@@ -1,0 +1,41 @@
+# Dependency folders
+node_modules/
+
+# Build output
+dist/
+
+# Firebase emulators and configs (optional local files)
+.firebase/
+firestore.indexes.json
+firestore.rules
+database.rules.json
+storage.rules
+
+# Environment variables (if used)
+.env
+.env.local
+.env.development.local
+.env.production.local
+.env.test.local
+
+# OS system files
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Vite cache
+.vite/
+
+# VS Code settings (if working with a team and using GitHub)
+.vscode/
+
+# Coverage reports (if you use testing)
+coverage/
+
+# IDE files
+.idea/
+*.iml

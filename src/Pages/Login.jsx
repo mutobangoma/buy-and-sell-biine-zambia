@@ -1,113 +1,105 @@
-// src/pages/Login.jsx
 import { useState } from "react";
-import { auth } from "../firebase";
 import {
-  signInWithPopup,
+  auth,
   GoogleAuthProvider,
+  signInWithPopup,
   RecaptchaVerifier,
   signInWithPhoneNumber,
-} from "firebase/auth";
+} from "../firebase";
+import { useNavigate } from "react-router-dom";
 
-function Login() {
+export default function Login() {
   const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
-  const [confirmationResult, setConfirmationResult] = useState(null);
-  const [showPhoneLogin, setShowPhoneLogin] = useState(false);
+  const [otp, setOtp]     = useState("");
+  const [verification, setVerification] = useState(null);
+  const [showPhone, setShowPhone] = useState(false);
+  const navigate = useNavigate();
 
-  const handleGoogleLogin = async () => {
+  /* ---------- Google ---------- */
+  const handleGoogle = async () => {
     try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      alert("Google sign-in successful!");
+      await signInWithPopup(auth, new GoogleAuthProvider());
+      navigate("/");                               // to home or admin
     } catch (err) {
-      console.error("Google sign-in failed", err);
+      alert(err.message);
     }
   };
 
-  const setupRecaptcha = () => {
+  /* ---------- Phone ---------- */
+  const sendOtp = async () => {
     if (!window.recaptchaVerifier) {
       window.recaptchaVerifier = new RecaptchaVerifier(
         "recaptcha-container",
-        {
-          size: "invisible",
-          callback: () => handleSendOtp(),
-        },
+        { size: "invisible" },
         auth
       );
     }
-  };
-
-  const handleSendOtp = async () => {
-    setupRecaptcha();
-    const appVerifier = window.recaptchaVerifier;
-
     try {
-      const result = await signInWithPhoneNumber(auth, phone, appVerifier);
-      setConfirmationResult(result);
-      alert("OTP sent successfully.");
-    } catch (error) {
-      console.error("Error sending OTP:", error);
-      alert("Failed to send OTP. Try again.");
+      const result = await signInWithPhoneNumber(
+        auth,
+        phone,
+        window.recaptchaVerifier
+      );
+      setVerification(result);
+      alert("OTP sent");
+    } catch (err) {
+      alert(err.message);
     }
   };
 
-  const handleVerifyOtp = async () => {
+  const verifyOtp = async () => {
     try {
-      await confirmationResult.confirm(otp);
-      alert("Phone authentication successful!");
-    } catch (error) {
-      console.error("OTP verification failed:", error);
-      alert("Invalid OTP.");
+      await verification.confirm(otp);
+      navigate("/");
+    } catch (err) {
+      alert("Invalid OTP");
     }
   };
 
+  /* ---------- UI ---------- */
   return (
-    <div className="p-4 max-w-md mx-auto text-center">
-      <h1 className="text-xl font-bold mb-4">Login</h1>
+    <div className="max-w-md mx-auto py-10 px-4 text-center">
+      <h1 className="text-xl font-semibold mb-6">Login</h1>
 
+      {/* Google */}
       <button
-        onClick={handleGoogleLogin}
-        className="bg-blue-600 text-white px-4 py-2 rounded w-full mb-4"
+        onClick={handleGoogle}
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded mb-4"
       >
         Sign in with Google
       </button>
 
       <button
-        onClick={() => setShowPhoneLogin(!showPhoneLogin)}
+        onClick={() => setShowPhone(!showPhone)}
         className="text-sm text-blue-500 underline mb-4"
       >
-        {showPhoneLogin ? "Use Google instead" : "Use Phone Number instead"}
+        {showPhone ? "Use Google instead" : "Use Phone Number instead"}
       </button>
 
-      {showPhoneLogin && (
+      {/* Phone */}
+      {showPhone && (
         <div className="space-y-4">
           <input
             type="tel"
             placeholder="+260955123456"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            className="border p-2 rounded w-full"
+            className="w-full border p-2 rounded"
           />
-          <button
-            onClick={handleSendOtp}
-            className="bg-blue-600 text-white px-4 py-2 rounded w-full"
-          >
+          <button onClick={sendOtp} className="w-full bg-blue-600 text-white py-2 rounded">
             Send OTP
           </button>
 
-          {confirmationResult && (
+          {verification && (
             <>
               <input
                 type="text"
                 placeholder="Enter OTP"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
-                className="border p-2 rounded w-full"
+                className="w-full border p-2 rounded"
               />
-              <button
-                onClick={handleVerifyOtp}
-                className="bg-green-600 text-white px-4 py-2 rounded w-full"
-              >
+              <button onClick={verifyOtp} className="w-full bg-green-600 text-white py-2 rounded">
                 Verify OTP
               </button>
             </>
@@ -119,5 +111,3 @@ function Login() {
     </div>
   );
 }
-
-export default Login;

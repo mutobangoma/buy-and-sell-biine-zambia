@@ -1,6 +1,8 @@
 {
+  "$schema": "./schemas/package.schema.json",
   "name": "biine-app",
   "version": "1.0.0",
+  "description": "Biine Classifieds App",
   "main": "index.js",
   "scripts": {
     "dev": "vite",
@@ -10,18 +12,30 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
+    "@fontsource/inter": "^5.2.6",
     "@vitejs/plugin-react": "^4.5.0",
     "autoprefixer": "^10.4.21",
     "firebase": "^11.8.1",
-    "postcss": "^8.5.4",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "flowbite": "1.6.5",
+    "flowbite-react": "0.4.7",
+    "framer-motion": "^12.18.1",
+    "lineicons": "^1.3.2",
+    "lucide-react": "^0.516.0",
+    "postcss": "^8.4.24",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
     "react-firebase-hooks": "^5.1.1",
+    "react-icons": "4.8.0",
     "react-router-dom": "^7.6.1",
-    "tailwindcss": "^4.1.8",
+    "swiper": "^11.2.8",
+    "tailwindcss": "3.4.1",
     "uuid": "^11.1.0",
     "vite": "^6.3.5"
-  }
+  },
+  "browserslist": [
+    "last 2 versions",
+    "not dead",
+    "not < 0.2%"
+  ]
 }

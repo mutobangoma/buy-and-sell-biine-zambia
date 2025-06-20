@@ -1,35 +1,37 @@
-// src/firebase.js
-
-import { getAuth } from "firebase/auth";
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-import { getAnalytics, isSupported } from "firebase/analytics";
-import { getDatabase } from "firebase/database";
+import { getAuth, GoogleAuthProvider, RecaptchaVerifier, signInWithPhoneNumber, signInWithPopup } from "firebase/auth";
+
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDkWJeGT5CipiFigswxYl6-NRXM5yD-R6E",
-  authDomain: "biine-4b5a9.firebaseapp.com",
-  databaseURL: "https://biine-4b5a9-default-rtdb.firebaseio.com",
-  projectId: "biine-4b5a9",
-  storageBucket: "biine-4b5a9.appspot.com",
-  messagingSenderId: "703004024125",
-  appId: "1:703004024125:web:0a0df8313547c17bdf3954",
-  measurementId: "G-1Q74DS50K7"
+  apiKey:             import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain:         import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  databaseURL:        import.meta.env.VITE_FIREBASE_DATABASE_URL,
+  projectId:          import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket:      import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId:  import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId:              import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId:      import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Warn if anything’s missing
+for (const [k, v] of Object.entries(firebaseConfig)) {
+  if (!v) console.warn(`⚠️  Missing Firebase ENV: ${k}`);
+}
 
-// Initialize Firestore and Storage
-export const db = getFirestore(app);
-export const storage = getStorage(app);
-export const auth = getAuth(app);
-export const database = getDatabase(app);
+const app      = initializeApp(firebaseConfig);
+const db       = getFirestore(app);
+const storage  = getStorage(app);
+const auth     = getAuth(app);
 
-// Optional: Initialize Analytics (only if supported)
-isSupported().then((supported) => {
-  if (supported) {
-    getAnalytics(app);
-  }
-});
+export {
+  app,
+  auth,
+  db,
+  storage,
+  GoogleAuthProvider,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  signInWithPopup,
+};
