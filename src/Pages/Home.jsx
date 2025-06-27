@@ -1,74 +1,110 @@
 import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
-
-import HeroCarousel from "../components/HeroCarousel";
-import HeroSection from "../components/HeroSection";
-import CategoryGrid from "../components/CategoryGrid";
-import SubCategoryGrid from "../components/SubCategoryGrid";
 import AdGrid from "../components/AdGrid";
+import CategoryGridPills from "../components/CategoryGridPills"; // New pills component
+import SubCategoryGrid from "../components/SubCategoryGrid";
+import HeroCarousel from "../components/HeroCarousel";
 
 function Home() {
   const [ads, setAds] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [promotedCategories, setPromotedCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState(null);
-  const [selectedLocation, setSelectedLocation] = useState(null);
   const [subcategoriesByCategory, setSubcategoriesByCategory] = useState({});
+  const [adCounts, setAdCounts] = useState({});
 
   useEffect(() => {
-    const fetchAds = async () => {
+    const fetchData = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, "ads"));
-        const adsData = querySnapshot.docs.map((doc) => ({
+        const adsSnapshot = await getDocs(collection(db, "ads"));
+        const adsData = adsSnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
         }));
         setAds(adsData);
 
-        // Group subcategories by category
         const subs = {};
-        adsData.forEach((ad) => {
+        const counts = {};
+
+        adsData.forEach(ad => {
           if (!ad.category || !ad.subcategory) return;
+
           if (!subs[ad.category]) subs[ad.category] = new Set();
           subs[ad.category].add(ad.subcategory);
+
+          if (!counts[ad.category]) counts[ad.category] = {};
+          if (!counts[ad.category][ad.subcategory]) counts[ad.category][ad.subcategory] = 0;
+          counts[ad.category][ad.subcategory]++;
         });
 
         const finalSubs = {};
         for (const cat in subs) {
-          finalSubs[cat] = Array.from(subs[cat]).map((name) => ({ name }));
+          finalSubs[cat] = Array.from(subs[cat]).map(name => ({ name }));
         }
 
         setSubcategoriesByCategory(finalSubs);
+        setAdCounts(counts);
+
+        const catSnapshot = await getDocs(collection(db, "categories"));
+        const allCategories = catSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setCategories(allCategories);
+        setPromotedCategories(allCategories.filter(cat => cat.promoted));
+
       } catch (error) {
-        console.error("Failed to fetch ads:", error);
+        console.error("❌ Failed to fetch data:", error);
       }
     };
 
-    fetchAds();
+    fetchData();
   }, []);
 
   const filteredAds = ads
-    .filter((ad) => !selectedCategory || ad.category === selectedCategory)
-    .filter((ad) => !selectedSubcategory || ad.subcategory === selectedSubcategory)
-    .filter((ad) => !selectedLocation || ad.location === selectedLocation);
+    .filter(ad => !selectedCategory || ad.category === selectedCategory)
+    .filter(ad => !selectedSubcategory || ad.subcategory === selectedSubcategory);
 
   return (
     <main className="min-h-screen bg-white text-black dark:bg-gray-950 dark:text-white transition-colors duration-300">
       <HeroCarousel />
 
-      <HeroSection
-        categories={Object.keys(subcategoriesByCategory).map((name) => ({ name }))}
-        selectedCategory={selectedCategory}
-        onSelect={(cat) => {
-          setSelectedCategory(cat);
-          setSelectedSubcategory(null);
-        }}
-        selectedLocation={selectedLocation}
-        onLocationSelect={setSelectedLocation}
-        locations={[
-          "Lusaka", "Kitwe", "Ndola", "Kabwe", "Chingola", "Mufulira",
-          "Choma", "Livingstone", "Solwezi", "Mazabuka", "Kasama", "Chipata",
-        ]}
+      {/* Ad placeholder box or real AdSense component */}
+      <div className="px-4 py-6 sm:px-8 flex justify-center">
+        {import.meta.env.DEV ? (
+          <div className="w-full h-20 bg-gray-200 border border-gray-300 rounded text-center text-gray-600 flex items-center justify-center">
+            Ad slot placeholder (visible only during development)
+          </div>
+        ) : (
+          <ins
+            className="adsbygoogle"
+            style={{ display: 'block' }}
+            data-ad-client="ca-pub-5658209077209925"
+            data-ad-slot="1234567890"
+            data-ad-format="auto"
+            data-full-width-responsive="true"
+          ></ins>
+        )}
+      </div>
+
+      {promotedCategories.length > 0 && (
+        <section className="py-4 px-4 md:px-8">
+          <div className="bg-green-100 dark:bg-green-900 p-4 rounded-lg shadow-md">
+            <h3 className="text-lg font-semibold text-green-800 dark:text-green-300 mb-2">🌟 Top Categories</h3>
+            <CategoryGridPills
+              categories={promotedCategories}
+              adCounts={adCounts}
+            />
+          </div>
+        </section>
+      )}
+
+      <CategoryGridPills
+        categories={categories}
+        adCounts={adCounts}
       />
 
       {selectedCategory && (

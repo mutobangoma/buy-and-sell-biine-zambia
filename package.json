@@ -5,8 +5,8 @@
   "description": "Biine Classifieds App",
   "main": "index.js",
   "scripts": {
+    "build": "vite build && cpx \"public/ads-v2.txt\" dist",
     "dev": "vite",
-    "build": "vite build",
     "preview": "vite preview"
   },
   "keywords": [],
@@ -37,5 +37,12 @@
     "last 2 versions",
     "not dead",
     "not < 0.2%"
-  ]
+  ],
+  "devDependencies": {
+    "copy": "^0.3.2",
+    "copyfiles": "^2.4.1",
+    "cpx": "^1.5.0",
+    "fs-extra": "^11.3.0",
+    "vite-plugin-pwa": "^1.0.0"
+  }
 }

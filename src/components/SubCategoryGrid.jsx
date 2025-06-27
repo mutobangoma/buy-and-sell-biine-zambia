@@ -13,6 +13,7 @@ import {
   Briefcase,
   Building2,
   ShoppingCart,
+  Truck,
 } from "lucide-react";
 
 const iconMap = {
@@ -23,6 +24,7 @@ const iconMap = {
   Food: Utensils,
   Agriculture: Apple,
   Cars: Car,
+  Electronics: Smartphone,
   RealEstate: Home,
   Pets: PawPrint,
   Books: BookOpen,

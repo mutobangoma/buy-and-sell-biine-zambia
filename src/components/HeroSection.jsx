@@ -3,7 +3,7 @@ import React from "react";
 
 export default function HeroSection({ categories, selectedCategory, onSelect, locations, selectedLocation, onLocationSelect }) {
   return (
-    <div className="bg-white py-6 px-4 shadow mb-4">
+    <div className="bg-green py-6 px-4 shadow mb-4">
       <h2 className="text-lg font-bold mb-2">Filter Ads</h2>
 
       <div className="flex flex-wrap gap-2">

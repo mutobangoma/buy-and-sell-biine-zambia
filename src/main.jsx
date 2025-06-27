@@ -7,6 +7,19 @@ import App from './App.jsx';
 import './index.css';
 import 'lineicons/dist/lineicons.css';
 
+// ✅ Import vite-plugin-pwa auto-register helper
+import { registerSW } from 'virtual:pwa-register';
+
+const updateSW = registerSW({
+  onNeedRefresh() {
+    if (confirm("🚀 A new version is available. Refresh now?")) {
+      updateSW(true);
+    }
+  },
+  onOfflineReady() {
+    console.log("✅ App is ready to work offline.");
+  },
+});
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -16,17 +29,3 @@ root.render(
     </BrowserRouter>
   </React.StrictMode>
 );
-
-// Register service worker
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/service-worker.js')
-      .then(registration => {
-        console.log('✅ Service Worker registered:', registration);
-      })
-      .catch(error => {
-        console.error('❌ Service Worker registration failed:', error);
-      });
-  });
-}

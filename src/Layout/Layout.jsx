@@ -1,39 +1,35 @@
-import { Outlet, Link, useLocation } from "react-router-dom";
-import { useState } from "react";
-import { Navbar, Dropdown, Sidebar } from "flowbite-react";
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Navbar, Dropdown, Sidebar, TextInput } from 'flowbite-react';
+import Footer from './Footer';
 
 export default function Layout() {
   const { pathname } = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const navigate = useNavigate();
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (search.trim()) {
+      navigate(`/search?q=${encodeURIComponent(search.trim())}`);
+      setSearch('');
+    }
+  };
+
+  const navButtonStyle = "bg-green-600 text-white px-4 py-1.5 rounded hover:bg-green-700";
 
   return (
-    <div className="relative min-h-screen">
-      {/* Top Bar */}
-      <div className="bg-purple-400/80 text-sm py-2">
-        <div className="container mx-auto flex justify-between px-4">
-          <ul className="flex space-x-4 text-black-700">
-            <li><i className="lni lni-phone"></i> +260 981 325485</li>
-            <li><i className="lni lni-envelope"></i> info@biine.app</li>
-          </ul>
-          <div className="flex items-center space-x-4">
-            <a href="#"><i className="lni lni-facebook-filled"></i></a>
-            <a href="#"><i className="lni lni-twitter-filled"></i></a>
-            <Link to="/login" className="hover:underline">Log In</Link>
-            <span>|</span>
-            <Link to="/register" className="hover:underline">Register</Link>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Sidebar Toggle Button */}
+    <div className="flex flex-col min-h-screen relative">
+      {/* Mobile Sidebar Button */}
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="md:hidden p-3 fixed top-[60px] left-4 z-50 bg-gray-200 rounded-lg shadow"
+        className="md:hidden p-3 fixed top-4 left-4 z-50 bg-gray-200 rounded-lg shadow"
       >
         <i className="lni lni-menu"></i>
       </button>
 
-      {/* Overlay */}
+      {/* Overlay for Sidebar */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black bg-opacity-50 md:hidden"
@@ -54,48 +50,60 @@ export default function Layout() {
             <Sidebar.Item as={Link} to="/about" onClick={() => setSidebarOpen(false)}>About Us</Sidebar.Item>
             <Sidebar.Item as={Link} to="/services" onClick={() => setSidebarOpen(false)}>Services</Sidebar.Item>
             <Sidebar.Item as={Link} to="/faq" onClick={() => setSidebarOpen(false)}>FAQ</Sidebar.Item>
+            <Sidebar.Item as={Link} to="/login" onClick={() => setSidebarOpen(false)}>Log In</Sidebar.Item>
+            <Sidebar.Item as={Link} to="/register" onClick={() => setSidebarOpen(false)}>Register</Sidebar.Item>
           </Sidebar.ItemGroup>
         </Sidebar.Items>
       </Sidebar>
 
-      {/* Desktop Navbar */}
-      <Navbar fluid rounded className="bg-white shadow sticky top-0 z-30 hidden md:flex">
-        <div className="max-w-screen-xl mx-auto w-full flex flex-wrap items-center justify-between">
+      {/* Navbar (Visible on all screen sizes) */}
+      <Navbar fluid rounded className="bg-white shadow sticky top-0 z-30">
+        <div className="max-w-screen-xl mx-auto w-full flex flex-wrap items-center justify-between px-4">
           <Navbar.Brand as={Link} to="/">
             <img src="/assets/img/logo.png" className="h-8 mr-3" alt="Biine Logo" />
             <span className="self-center whitespace-nowrap text-xl font-semibold text-green-600">
-              Biine Market Place...
+              Biine Market Place
             </span>
           </Navbar.Brand>
+
+          <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 w-full md:w-64">
+            <TextInput
+              type="search"
+              placeholder="Search..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              required
+            />
+          </form>
+
           <Navbar.Toggle />
           <Navbar.Collapse>
-            <Navbar.Link as={Link} to="/" active={pathname === "/"}>Home</Navbar.Link>
-            <Navbar.Link as={Link} to="/categories" active={pathname === "/categories"}>Categories</Navbar.Link>
-            <Navbar.Link as={Link} to="/about" active={pathname === "/about"}>About</Navbar.Link>
-            <Dropdown label="Listings" inline>
-              <Dropdown.Item as={Link} to="/ads/grid">Ad Grid</Dropdown.Item>
-              <Dropdown.Item as={Link} to="/ads/list">Ad Listing</Dropdown.Item>
-              <Dropdown.Item as={Link} to="/ads/123">Listing Detail</Dropdown.Item>
-            </Dropdown>
-            <Dropdown label="Pages" inline>
-              <Dropdown.Item as={Link} to="/about">About Us</Dropdown.Item>
-              <Dropdown.Item as={Link} to="/services">Services</Dropdown.Item>
-              <Dropdown.Item as={Link} to="/post-ad">Post Ad</Dropdown.Item>
-              <Dropdown.Item as={Link} to="/faq">FAQ</Dropdown.Item>
-            </Dropdown>
-            <Navbar.Link as={Link} to="/post-ad">
-              <button className="bg-green-600 text-white px-4 py-1.5 rounded hover:bg-green-700">
-                Post Ad
-              </button>
+            <Navbar.Link as={Link} to="/" active={pathname === "/"}>
+              <button className={navButtonStyle}>Home</button>
+            </Navbar.Link>
+            <Navbar.Link as={Link} to="/categories" active={pathname === "/categories"}>
+              <button className={navButtonStyle}>Categories</button>
+            </Navbar.Link>            
+            <Navbar.Link as={Link} to="/post-ad" active={pathname === "/post-ad"}>
+              <button className={navButtonStyle}>Post Ad</button>
+            </Navbar.Link>
+            <Navbar.Link as={Link} to="/login" active={pathname === "/login"}>
+              <button className={navButtonStyle}>Log In</button>
+            </Navbar.Link>
+            <Navbar.Link as={Link} to="/register" active={pathname === "/register"}>
+              <button className={navButtonStyle}>Register</button>
             </Navbar.Link>
           </Navbar.Collapse>
         </div>
       </Navbar>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-6 max-w-screen-lg">
+      <main className="container mx-auto px-4 py-6 max-w-screen-lg flex-grow">
         <Outlet />
       </main>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }
